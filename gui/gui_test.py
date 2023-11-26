@@ -22,6 +22,7 @@ def handle_queries():
     # age_end = age_end_entry.get()
     train_name = train_name_entry.get()
 
+
     # SQL query to retrieve trains a passenger is booked on based on last name and first name
     query_trains = f"SELECT DISTINCT Train.* FROM Train " \
                    f"JOIN Booked ON Train.Train_Number = Booked.Train_Number " \
