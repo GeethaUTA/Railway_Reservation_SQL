@@ -1,0 +1,59 @@
+import tkinter as tk
+import sqlite3
+
+# Establish a connection to the SQLite database and create a cursor
+conn = sqlite3.connect('railway_reservation.db')
+cursor = conn.cursor()
+
+# Function to execute SQL queries based on user input
+def execute_query(query):
+    cursor.execute(query)
+    result = cursor.fetchall()
+    return result
+
+def handle_queries():
+    last_name = last_name_entry.get()
+    first_name = first_name_entry.get()
+
+
+
+    # SQL query to retrieve trains a passenger is booked on based on last name and first name
+    query_trains = f"SELECT DISTINCT Train.* FROM Train " \
+                   f"JOIN Booked ON Train.Train_Number = Booked.Train_Number " \
+                   f"JOIN Passenger ON Booked.Passenger_ssn = Passenger.SSN " \
+                   f"WHERE Passenger.last_name = '{last_name}' AND Passenger.first_name = '{first_name}'"
+    result_trains = execute_query(query_trains)
+     # Display the fetched train information in the GUI
+    if result_trains:
+        formatted_result_trains = "\n".join(", ".join(map(str, row)) for row in result_trains)
+        result_label_trains.config(text=f"Trains booked for {first_name} {last_name}:\n{formatted_result_trains}")
+    else:
+        result_label_trains.config(text="No trains found for this passenger")
+
+
+
+# GUI setup
+root = tk.Tk()
+root.title("Combined Queries")
+
+# Section for retrieving trains booked by a specific passenger last name and first name
+trains_frame = tk.Frame(root)
+trains_frame.pack()
+
+last_name_label = tk.Label(trains_frame, text="Enter Last Name:")
+last_name_label.pack()
+last_name_entry = tk.Entry(trains_frame)
+last_name_entry.pack()
+
+first_name_label = tk.Label(trains_frame, text="Enter First Name:")
+first_name_label.pack()
+first_name_entry = tk.Entry(trains_frame)
+first_name_entry.pack()
+
+query_button_trains = tk.Button(trains_frame, text="Retrieve Trains", command=handle_queries)
+query_button_trains.pack()
+
+result_label_trains = tk.Label(trains_frame, text="")
+result_label_trains.pack()        
+
+root.mainloop()

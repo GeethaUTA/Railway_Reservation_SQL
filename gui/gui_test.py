@@ -151,7 +151,7 @@ def open_cancel_ticket_window():
 root = tk.Tk()
 root.title("Combined Queries")
 
-# Section for retrieving trains booked by a specific passenger
+# Section for retrieving trains booked by a specific passenger last name and first name
 trains_frame = tk.Frame(root)
 trains_frame.pack()
 
@@ -175,7 +175,7 @@ result_label_trains.pack()
 passengers_frame = tk.Frame(root)
 passengers_frame.pack()
 
-date_label_passengers = tk.Label(passengers_frame, text="Enter Date (YYYY-MM-DD):")
+date_label_passengers = tk.Label(passengers_frame, text="Enter Date (MM/DD/YY):")
 date_label_passengers.pack()
 date_entry = tk.Entry(passengers_frame)
 date_entry.pack()
