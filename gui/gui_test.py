@@ -11,6 +11,7 @@ def execute_query(query):
     result = cursor.fetchall()
     return result
 
+    
 # Function to handle both queries
 def handle_queries():
     last_name = last_name_entry.get()
