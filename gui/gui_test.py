@@ -13,6 +13,8 @@ def execute_query(query):
 
 
 
+
+
 # Function to handle both queries
 def handle_queries():
     last_name = last_name_entry.get()
