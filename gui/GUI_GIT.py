@@ -15,11 +15,10 @@ def execute_query(query):
 
 
 
-
 # Function to handle both queries
 def handle_queries():
-    last_name = last_name_entry.get()
     first_name = first_name_entry.get()
+    last_name = last_name_entry.get()
     date = date_entry.get()
     # age_start = age_start_entry.get()
     # age_end = age_end_entry.get()
@@ -34,14 +33,13 @@ def handle_queries():
 
     # SQL query to retrieve passengers traveling on the entered date with confirmed tickets
     query_passengers = f"SELECT DISTINCT Passenger.* FROM Passenger " \
-                        f"JOIN Booked ON Passenger.SSN = Train_status.Passenger_ssn " \
-                          f"WHERE Train_status.TrainDate ='{date}' AND Booked.Status = 'Booked'"
-    # f"WHERE Train_status.TrainDate ='{date}' AND Booked.Status = 'Booked'"
+                       f"JOIN Booked ON Passenger.SSN = Booked.Passenger_ssn " \
+                       f"WHERE Passenger.bdate = '{date}' AND Booked.Status = 'Booked'"
     
     # query_passengers_by_age = f"SELECT Train.Train_Number, Train.Train_Name, Train.Source_Station, Train.Destination_Station, " \
     #         f"Passenger.first_name || ' ' || Passenger.last_name AS Name, " \
     #         f"Passenger.address, Passenger.Category, Booked.Status " \
-    #         f"FROM Passenger,Booked,Train_status, " \
+    #         f"FROM Passenger " \
     #         f"JOIN Booked ON Passenger.SSN = Booked.Passenger_ssn " \
     #         f"JOIN Train ON Train.Train_Number = Booked.Train_Number " \
     #         f"WHERE CAST((julianday('now') - julianday(Passenger.bdate)) / 365 AS int) BETWEEN {age_start} AND {age_end}"
@@ -155,17 +153,18 @@ root.title("Combined Queries")
 
 # Section for retrieving trains booked by a specific passenger last name and first name
 trains_frame = tk.Frame(root)
-trains_frame.pack()
+trains_frame.pack(pady=10)
 
-last_name_label = tk.Label(trains_frame, text="Enter Last Name:")
-last_name_label.pack()
-last_name_entry = tk.Entry(trains_frame)
-last_name_entry.pack()
 
 first_name_label = tk.Label(trains_frame, text="Enter First Name:")
 first_name_label.pack()
 first_name_entry = tk.Entry(trains_frame)
 first_name_entry.pack()
+
+last_name_label = tk.Label(trains_frame, text="Enter Last Name:")
+last_name_label.pack()
+last_name_entry = tk.Entry(trains_frame)
+last_name_entry.pack()
 
 query_button_trains = tk.Button(trains_frame, text="Retrieve Trains", command=handle_queries)
 query_button_trains.pack()
@@ -175,7 +174,7 @@ result_label_trains.pack()
 
 # Section for retrieving passengers with a specific booking date
 passengers_frame = tk.Frame(root)
-passengers_frame.pack()
+passengers_frame.pack(pady=10)
 
 date_label_passengers = tk.Label(passengers_frame, text="Enter Date (MM/DD/YY):")
 date_label_passengers.pack()
@@ -213,7 +212,7 @@ result_label_passengers.pack()
 
 # Section for retrieving Train and passengers count
 passengers_count_by_train_frame = tk.Frame(root)
-passengers_count_by_train_frame.pack()
+passengers_count_by_train_frame.pack(pady=10)
 # Button to trigger query execution
 query_button_passengers_count_by_train = tk.Button(passengers_count_by_train_frame, text="Retrieve Information", command=handle_queries)
 query_button_passengers_count_by_train.pack()
@@ -226,7 +225,7 @@ result_label_passengers_count_by_train.pack()
 
 #section to retrive passengers information by train name
 passengers_by_train_name_frame = tk.Frame(root)
-passengers_by_train_name_frame.pack()
+passengers_by_train_name_frame.pack(pady=10)
 
 # Input field for entering the train name
 train_name_label = tk.Label(passengers_by_train_name_frame, text="Enter Train Name:")

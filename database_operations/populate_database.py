@@ -69,3 +69,4 @@ insert_data_from_csv(r'C:\Users\DELL\Desktop\Foundations_Of_Computing\RRS\booked
 # Commit changes and close the connection
 conn.commit()
 conn.close()
+

@@ -33,7 +33,7 @@ def handle_queries(last_name_entry, first_name_entry,result_label_trains):
     else:
         result_label_trains.config(text="No trains found for this passenger")
 
-def handle_queries2(date_entry,result_label_passengers):
+def handle_queries2(date_entry,result_label_passengers_by_date):
 
     date = date_entry.get()
     
@@ -41,17 +41,23 @@ def handle_queries2(date_entry,result_label_passengers):
     try:
         formatted_date = datetime.strptime(date, "%m/%d/%y").strftime("%Y-%m-%d")
     except ValueError:
-        result_label_passengers.config(text="Invalid date format. Please use MM/DD/YY.")
+        result_label_passengers_by_date.config(text="Invalid date format. Please use MM/DD/YY.")
         return
     
-    query_passengers = query_passengers = f"SELECT Passenger.* FROM Passenger JOIN Booked ON Passenger.SSN = Booked.Passenger_ssn JOIN Train ON Train.Train_Number = Booked.Train_Number JOIN Train_Status ON Train.Train_Name = Train_Status.TrainName WHERE Train_Status.TrainDate = '{formatted_date}' AND Booked.Status = 'Confirmed'"
+    #query_passengers = f"SELECT Passenger.* FROM Passenger JOIN Booked ON Passenger.SSN = Booked.Passenger_ssn JOIN Train ON Train.Train_Number = Booked.Train_Number JOIN Train_Status ON Train.Train_Name = Train_Status.TrainName WHERE Train_Status.TrainDate = '{formatted_date}' AND Booked.Status = 'Confirmed'"
+    query_passengers=f"SELECT DISTINCT Passenger.* "\
+f"FROM Passenger "\
+f"JOIN Booked ON Passenger.SSN = Booked.Passenger_ssn "\
+f"JOIN Train ON Booked.Train_Number = Train.Train_Number "\
+f"JOIN Train_Status ON Train.Train_Name = Train_Status.TrainName "\
+f"WHERE strftime('%m/%d/%Y', Train_Status.TrainDate) = '{date}' AND Booked.Status = 'Booked'"
 
     result_passengers = execute_query(query_passengers)
     if result_passengers:
         formatted_result_passengers = "\n".join(", ".join(map(str, row)) for row in result_passengers)
-        result_label_passengers.config(text=f"Passengers with booked status on {date}:\n{formatted_result_passengers}")
+        result_label_passengers_by_date.config(text=f"Passengers with booked status on {date}:\n{formatted_result_passengers}")
     else:
-        result_label_passengers.config(text="No passengers found for this date")
+        result_label_passengers_by_date.config(text="No passengers found for this date")
 
 
 def handle_queries3(result_label_passengers_count_by_train):
@@ -86,46 +92,94 @@ def handle_queries4(train_name_entry,result_label_passengers_by_train_name):
     else:
         result_label_passengers_by_train_name.config(text="No passengers found for this train")
 
+# Function to open the cancel ticket window
+def open_cancel_ticket_window():
+    def cancel_ticket():
+        passenger_ssn = ssn_entry.get()
+        train_number = train_number_entry.get()
 
+        # Remove the canceled ticket record
+        delete_query = f"DELETE FROM Booked WHERE Passenger_ssn = '{passenger_ssn}' AND Train_Number = '{train_number}'"
+        execute_query(delete_query)
 
+        # Find a passenger on the waiting list for that train
+        waiting_passenger_query = f"SELECT Passenger_ssn FROM Booked WHERE Train_Number = '{train_number}' AND Status = 'WaitL' LIMIT 1"
+        waiting_passenger = execute_query(waiting_passenger_query)
 
+        if waiting_passenger:
+            # Update the waiting passenger's status to 'confirmed'
+            waiting_passenger_ssn = waiting_passenger[0][0]
+            update_query = f"UPDATE Booked SET Status = 'confirmed' WHERE Passenger_ssn = '{passenger_ssn}' AND Train_Number = '{train_number}'"
+            execute_query(update_query)
 
+            result_label.config(text=f"Ticket canceled for {passenger_ssn}. Passenger {waiting_passenger_ssn} from the waiting list confirmed.")
+        else:
+            result_label.config(text=f"No waiting passengers for train {train_number}")
 
+    cancel_window = tk.Toplevel(root)
+    cancel_window.title("Cancel Ticket and Confirm Waiting Passenger")
 
+    global ssn_entry, train_number_entry, result_label
 
+    # Input fields for Passenger SSN and Train Number
+    ssn_label = tk.Label(cancel_window, text="Enter Passenger SSN:")
+    ssn_label.pack()
+    ssn_entry = tk.Entry(cancel_window)
+    ssn_entry.pack()
 
+    train_number_label = tk.Label(cancel_window, text="Enter Train Number:")
+    train_number_label.pack()
+    train_number_entry = tk.Entry(cancel_window)
+    train_number_entry.pack()
 
+    # Button to trigger canceling a ticket and confirming a waiting passenger
+    cancel_button = tk.Button(cancel_window, text="Cancel Ticket", command=cancel_ticket)
+    cancel_button.pack()
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+    # Label to display the result
+    result_label = tk.Label(cancel_window, text="")
+    result_label.pack()
 
 
 
 
 # GUI setup
 root = tk.Tk()
-root.title("Railways")
+root.title("")  # Clear the default title
+
+    # Custom title label with different colors and fonts
+title_label = tk.Label(root, text="Railways Reservation System", font=("Arial", 20, "bold"), fg="black")
+title_label.pack()
+
+# Load the image (Replace 'train.gif' with the path to your image)
+train_image = tk.PhotoImage(file=r'C:\Users\DELL\Desktop\Foundations_Of_Computing\RRS\CHATTANOOGA-GIF2.gif')
+
+# Create a label to display the image
+image_label = tk.Label(root, image=train_image)
+image_label.pack()
+
+
+# def create_clickable_frame(parent, text, click_handler):
+#     frame = tk.Frame(parent, bd=1, relief=tk.RAISED, width=200, height=30)
+#     frame.pack(pady=5)
+
+#     label = tk.Label(frame, text=text, cursor="hand2")
+#     label.pack(expand=True, fill='both')
+#     label.bind("<Button-1>", click_handler)
+    
+#     return frame
 
 def create_clickable_frame(parent, text, click_handler):
-    frame = tk.Frame(parent, bd=1, relief=tk.RAISED, width=200, height=30)
-    frame.pack(pady=5)
+    frame = tk.Frame(parent, bd=1, relief=tk.RAISED, width=300, height=50)  # Increase width and height for a bigger size
+    frame.pack(pady=10)
 
-    label = tk.Label(frame, text=text, cursor="hand2")
+    label = tk.Label(frame, text=text, cursor="hand2", fg="blue")  # Set text color to blue (or any other color)
+    label.config(font=("Arial", 12))  # Set font size
     label.pack(expand=True, fill='both')
     label.bind("<Button-1>", click_handler)
     
     return frame
+
 
 
 
@@ -165,10 +219,10 @@ def on_trains_by_date_click(event):
     date_entry = tk.Entry(trains_window)
     date_entry.pack()
 
-    result_label_passengers_count_by_train = tk.Label(trains_window, text="")
-    result_label_passengers_count_by_train.pack()
+    result_label_passengers_by_date = tk.Label(trains_window, text="")
+    result_label_passengers_by_date.pack()
 
-    query_button_passengers = tk.Button(trains_window, text="Retrieve Passengers count by train names", command=lambda: handle_queries3(result_label_passengers))
+    query_button_passengers = tk.Button(trains_window, text="Retrieve Passengers count by train names", command=lambda: handle_queries2(date_entry,result_label_passengers_by_date))
     query_button_passengers.pack()
 
 def on_trains_by_count_click(event):
@@ -182,7 +236,7 @@ def on_trains_by_count_click(event):
     result_label_passengers_count_by_train = tk.Label(trains_window, text="")
     result_label_passengers_count_by_train.pack()
 
-    query_button_passengers = tk.Button(trains_window, text="Retrieve Passengers", command=lambda: handle_queries4(train_name_entry,result_label_passengers_by_train_name))
+    query_button_passengers = tk.Button(trains_window, text="Retrieve Passengers", command=lambda: handle_queries3(result_label_passengers_count_by_train))
     query_button_passengers.pack()
 
 def on_passengers_by_train_name_click(event):
@@ -199,8 +253,15 @@ def on_passengers_by_train_name_click(event):
     result_label_passengers_by_train_name = tk.Label(trains_window, text="")
     result_label_passengers_by_train_name.pack()
 
-    query_button_passengers_by_train_name = tk.Button(trains_window, text="Retrieve Passengers(confirmed) count by train names", command=lambda: handle_queries4(result_label_passengers_by_train_name))
+    query_button_passengers_by_train_name = tk.Button(trains_window, text="Retrieve Passengers(confirmed) count by train names", command=lambda: handle_queries4(train_name_entry,result_label_passengers_by_train_name))
     query_button_passengers_by_train_name.pack()
+
+
+
+
+def on_cancel_ticket_click(event):
+    open_cancel_ticket_window()
+   
 
 
 # Section for retrieving trains booked by a specific passenger last name and first name
@@ -234,6 +295,11 @@ trains_frame_4 = create_clickable_frame(side_by_side_frame, "Passengers by Train
 trains_frame_4.pack(side=tk.LEFT, padx=10)
 
 
+#cancel ticket
+
+#cancel ticket
+cancel_ticket_frame = create_clickable_frame(side_by_side_frame, "Cancel Ticket", on_cancel_ticket_click)
+cancel_ticket_frame.pack(side=tk.LEFT, padx=10)
 
 
 
