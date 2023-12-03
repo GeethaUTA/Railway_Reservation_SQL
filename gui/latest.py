@@ -1,6 +1,10 @@
 import tkinter as tk
 import sqlite3
 from datetime import datetime
+import tkinter as tk
+from tkinter import font
+from tkinter import ttk
+from datetime import datetime, timedelta
 
 # Establish a connection to the SQLite database and create a cursor
 conn = sqlite3.connect('railway_reservation.db')
@@ -11,6 +15,80 @@ def execute_query(query):
     cursor.execute(query)
     result = cursor.fetchall()
     return result
+
+def display_table_trains(result):
+    table_window = tk.Toplevel(root)
+    table_window.title("Trains Information")
+
+    tree = ttk.Treeview(table_window)
+    tree['columns'] = tuple(['Train_Number', 'Train_Name', 'Source_Station', 'Destination_Station'])  
+
+    for col in tree['columns']:
+        tree.column(col, anchor=tk.CENTER)
+        tree.heading(col, text=col, anchor=tk.CENTER)
+
+    for row in result:
+        tree.insert('', tk.END, values=row)
+
+    tree.pack(expand=True, fill='both')
+
+def display_table_passengers(result):
+    table_window = tk.Toplevel(root)
+    table_window.title("Booked Passenger Information ")
+
+    tree = ttk.Treeview(table_window)
+    tree['columns'] = tuple(['First_Name', 'Last_Name', 'Address', 'City', 'County','Phone','SSN','Bdate'])  # Replace with your column names
+
+    for col in tree['columns']:
+        tree.column(col, anchor=tk.CENTER)
+        tree.heading(col, text=col, anchor=tk.CENTER)
+
+    for row in result:
+        tree.insert('', tk.END, values=row)
+
+    tree.pack(expand=True, fill='both')
+
+def display_table_passengers_count_by_train(result):
+    table_window = tk.Toplevel(root)
+    table_window.title("Trains and count of passengers")
+
+    tree = ttk.Treeview(table_window)
+    tree['columns'] = tuple(['Trian_Name', 'Count of Passengers'])  # Replace with your column names
+
+    for col in tree['columns']:
+        tree.column(col, anchor=tk.CENTER)
+        tree.heading(col, text=col, anchor=tk.CENTER)
+
+    for row in result:
+        tree.insert('', tk.END, values=row)
+
+    tree.pack(expand=True, fill='both')
+
+def display_table_passengers_by_age(result):
+    table_window = tk.Toplevel(root)
+    table_window.title("Booked Passenger Information ")
+
+    tree = ttk.Treeview(table_window)
+    tree['columns'] = tuple(['Train_Number', 'Train_Name', 'Source_Station','Destination_Station','Passenger_Name','Address','Ticket_type','Status'])  # Replace with your column names
+
+    for col in tree['columns']:
+        tree.column(col, anchor=tk.CENTER)
+        tree.heading(col, text=col, anchor=tk.CENTER)
+
+    for row in result:
+        tree.insert('', tk.END, values=row)
+
+    tree.pack(expand=True, fill='both')
+
+
+
+
+
+
+
+
+
+
 
 def handle_queries(last_name_entry, first_name_entry,result_label_trains):
     last_name = last_name_entry.get()
@@ -26,12 +104,26 @@ def handle_queries(last_name_entry, first_name_entry,result_label_trains):
                    f"WHERE Passenger.last_name = '{last_name}' AND Passenger.first_name = '{first_name}'"
     result_trains = execute_query(query_trains)
      # Display the fetched train information in the GUI
-
     if result_trains:
-        formatted_result_trains = "\n".join(", ".join(map(str, row)) for row in result_trains)
-        result_label_trains.config(text=f"Trains booked for {first_name} {last_name}:\n{formatted_result_trains}")
+
+        result_label_trains.config(text=f"Trains booked for {first_name} {last_name}")
+        display_table_trains(result_trains)
     else:
         result_label_trains.config(text="No trains found for this passenger")
+
+
+
+
+
+
+
+
+
+    # if result_trains:
+    #     formatted_result_trains = "\n".join(", ".join(map(str, row)) for row in result_trains)
+    #     result_label_trains.config(text=f"Trains booked for {first_name} {last_name}:\n{formatted_result_trains}")
+    # else:
+    #     result_label_trains.config(text="No trains found for this passenger")
 
 def handle_queries2(date_entry,result_label_passengers_by_date):
 
@@ -44,20 +136,28 @@ def handle_queries2(date_entry,result_label_passengers_by_date):
         result_label_passengers_by_date.config(text="Invalid date format. Please use MM/DD/YY.")
         return
     
-    #query_passengers = f"SELECT Passenger.* FROM Passenger JOIN Booked ON Passenger.SSN = Booked.Passenger_ssn JOIN Train ON Train.Train_Number = Booked.Train_Number JOIN Train_Status ON Train.Train_Name = Train_Status.TrainName WHERE Train_Status.TrainDate = '{formatted_date}' AND Booked.Status = 'Confirmed'"
-    query_passengers=f"SELECT DISTINCT Passenger.* "\
-f"FROM Passenger "\
-f"JOIN Booked ON Passenger.SSN = Booked.Passenger_ssn "\
-f"JOIN Train ON Booked.Train_Number = Train.Train_Number "\
-f"JOIN Train_Status ON Train.Train_Name = Train_Status.TrainName "\
-f"WHERE strftime('%m/%d/%Y', Train_Status.TrainDate) = '{date}' AND Booked.Status = 'Booked'"
+    # query_passengers = f"SELECT Passenger.* FROM Passenger JOIN Booked ON Passenger.SSN = Booked.Passenger_ssn JOIN Train ON Train.Train_Number = Booked.Train_Number JOIN Train_status ON Train.Train_Name = Train_status.TrainName WHERE Train_status.TrainDate = '{formatted_date}' AND Booked.Status = 'Confirmed'"
+    # test query_passengers=query_passengers = f"SELECT * from Train_status WHERE Train_status.TrainDate = '{formatted_date}' "
 
+    query_passengers = f"SELECT DISTINCT Passenger.* "\
+    f"FROM Passenger "\
+    f"JOIN Booked ON Passenger.SSN = Booked.Passenger_ssn "\
+    f"JOIN Train ON Booked.Train_Number = Train.Train_Number "\
+    f"JOIN Train_Status ON Train.Train_Name = Train_Status.TrainName "\
+    f"WHERE strftime('%m/%d/%Y', Train_Status.TrainDate) = '{date}' AND Booked.Status = 'Booked'"
     result_passengers = execute_query(query_passengers)
     if result_passengers:
-        formatted_result_passengers = "\n".join(", ".join(map(str, row)) for row in result_passengers)
-        result_label_passengers_by_date.config(text=f"Passengers with booked status on {date}:\n{formatted_result_passengers}")
+
+        result_label_passengers_by_date.config(text=f"Passengers with booked status on {date}")
+        display_table_passengers(result_label_passengers_by_date)
     else:
         result_label_passengers_by_date.config(text="No passengers found for this date")
+    
+    # if result_passengers:
+    #     formatted_result_passengers = "\n".join(", ".join(map(str, row)) for row in result_passengers)
+    #     result_label_passengers_by_date.config(text=f"Passengers with booked status on {date}:\n{formatted_result_passengers}")
+    # else:
+    #     result_label_passengers_by_date.config(text="No passengers found for this date")
 
 
 def handle_queries3(result_label_passengers_count_by_train):
@@ -69,8 +169,7 @@ def handle_queries3(result_label_passengers_count_by_train):
 
     if result_passengers_count_by_train:
         # Prepare the result to display each row in a new line
-        formatted_result_passengers_count_by_train = "\n".join(", ".join(map(str, row)) for row in result_passengers_count_by_train)
-        result_label_passengers_count_by_train.config(text=f"Train names along with passenger counts:\n{formatted_result_passengers_count_by_train}")
+        display_table_passengers_count_by_train(result_passengers_count_by_train)
     else:
         result_label_passengers_count_by_train.config(text="No information found")
 
@@ -87,10 +186,44 @@ def handle_queries4(train_name_entry,result_label_passengers_by_train_name):
     
     if result_passengers_by_train_name:
         # Prepare the result to display each row in a new line
-        formatted_result_passengers_by_train_name = "\n".join(", ".join(map(str, row)) for row in result_passengers_by_train_name)
-        result_label_passengers_by_train_name.config(text=f"Passengers with confirmed status in {train_name}:\n{formatted_result_passengers_by_train_name}")
+    #     formatted_result_passengers_by_train_name = "\n".join(", ".join(map(str, row)) for row in result_passengers_by_train_name)
+    #     result_label_passengers_by_train_name.config(text=f"Passengers with confirmed status in {train_name}:\n{formatted_result_passengers_by_train_name}")
+          display_table_passengers(result_passengers_by_train_name)
+    
     else:
         result_label_passengers_by_train_name.config(text="No passengers found for this train")
+
+def handle_queries5(age_start_entry, age_end_entry,result_label_trains):
+    age_start = int(age_start_entry.get())
+    age_end = int(age_end_entry.get())
+    
+
+
+
+    # SQL query to retrieve trains a passenger is booked on based on last name and first name
+    query_passengers_by_age = f"SELECT DISTINCT Train.Train_Number, Train.Train_Name, Train.Source_Station, Train.Destination_Station, " \
+         f"Passenger.first_name || ' ' || Passenger.last_name AS Name, " \
+         f"Passenger.address, Booked.Ticket_Type, Booked.Status " \
+         f"FROM Passenger " \
+         f"JOIN Booked ON Passenger.SSN = Booked.Passenger_ssn " \
+         f"JOIN Train ON Train.Train_Number = Booked.Train_Number " \
+         f"WHERE CAST(strftime('%Y', 'now') AS INTEGER) - CAST('19' || substr(bdate, -2) AS INTEGER) BETWEEN {age_start} AND {age_end}"
+
+
+
+    result_passengers_by_age = execute_query(query_passengers_by_age)
+     # Display the fetched train information in the GUI
+
+    if result_passengers_by_age:
+        # formatted_passenger_info = "\n".join(", ".join(map(str, row)) for row in result_passengers_by_age)
+        # result_label_trains.config(text=f"Passenger Information (Age 50-60):\n{formatted_passenger_info}")
+        display_table_passengers_by_age(result_passengers_by_age)
+    else:
+        result_label_trains.config(text="No passengers found in this age range")
+
+
+
+
 
 # Function to open the cancel ticket window
 def open_cancel_ticket_window():
@@ -256,8 +389,26 @@ def on_passengers_by_train_name_click(event):
     query_button_passengers_by_train_name = tk.Button(trains_window, text="Retrieve Passengers(confirmed) count by train names", command=lambda: handle_queries4(train_name_entry,result_label_passengers_by_train_name))
     query_button_passengers_by_train_name.pack()
 
+def on_passengers_by_age_click(event):
 
+    trains_window = tk.Toplevel(root)
+    trains_window.title("Passengers Information by Age ")
 
+    age_start_label = tk.Label(trains_window, text="Enter age start")
+    age_start_label.pack()
+    age_start_entry = tk.Entry(trains_window)
+    age_start_entry.pack()
+
+    age_end_label = tk.Label(trains_window, text="Enter age end")
+    age_end_label.pack()
+    age_end_entry = tk.Entry(trains_window)
+    age_end_entry.pack()
+        
+    result_label_trains = tk.Label(trains_window, text="")
+    result_label_trains.pack()
+
+    query_button_trains = tk.Button(trains_window, text="Retrieve Trains", command=lambda: handle_queries5(age_start_entry, age_end_entry, result_label_trains))
+    query_button_trains.pack()
 
 def on_cancel_ticket_click(event):
     open_cancel_ticket_window()
@@ -293,6 +444,12 @@ spacer_frame.pack(side=tk.LEFT)
 
 trains_frame_4 = create_clickable_frame(side_by_side_frame, "Passengers by Train Name", on_passengers_by_train_name_click)
 trains_frame_4.pack(side=tk.LEFT, padx=10)
+
+spacer_frame = tk.Frame(side_by_side_frame, width=20)
+spacer_frame.pack(side=tk.LEFT)
+
+trains_frame_5 = create_clickable_frame(side_by_side_frame, "Passengers by Age", on_passengers_by_age_click)
+trains_frame_5.pack(side=tk.LEFT, padx=10)
 
 
 #cancel ticket
